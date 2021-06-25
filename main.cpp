@@ -25,13 +25,14 @@ int main(int argc, char *argv[]){
 	thisSimulation.clearWalls();
 
 	thisSimulation.addTrailofWalls(std::vector<Vector>{Vector(-100.0f, 2.0f), Vector(1.0f, 2.0f),
-																		Vector(1.0f, 2.0f), Vector(1.0f, 0.0f),
-																		Vector(1.0f, 0.0f), Vector(100.0f, 0.0f)});
+								Vector(1.0f, 2.0f), Vector(1.0f, 0.0f),
+								Vector(1.0f, 0.0f), Vector(100.0f, 0.0f)});
 	thisSimulation.writeWallsToFile("walls.dat");
 
-	thisSimulation.initChain(10);
+	thisSimulation.initChain(100);
 
-	thisSimulation.chain.quickArrangementLine(Vector(0.0f, 2.5f), Vector(2.0f, 3.0f));
+	//thisSimulation.chain.quickArrangementLine(Vector(0.0f, 2.5f), Vector(2.0f, 3.0f));
+	thisSimulation.chain.quickArrangementEntwined(Vector(0.0f, 2.5f), 0.5f, 3);
 
 	thisSimulation.writeChainToFile("chain.dat");
 

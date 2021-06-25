@@ -17,3 +17,10 @@ ChainLink::ChainLink(ChainElement *someElementA, ChainElement *someElementB) {
 	elA = someElementA;
 	elB = someElementB;
 }
+void ChainLink::refreshLinkLength() {
+	if (elA && elB)
+		linkLength0 = sqrt((elA->x - elB->x)*(elA->x - elB->x)
+				  + (elA->y - elB->y)*(elA->y - elB->y));
+	else 
+		linkLength0 = 0.0f;
+}

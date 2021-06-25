@@ -9,6 +9,7 @@ public:
 	double linkLength0;
 	ChainLink();
 	ChainLink(ChainElement *, ChainElement *);
+	void refreshLinkLength();
 };
 
 #endif

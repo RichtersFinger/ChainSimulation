@@ -12,6 +12,8 @@ public:
 	Chain();
 	void makeSimpleChain(int);
 	void quickArrangementLine(Vector, Vector);
+	void quickArrangementEntwined(Vector, double, int);
+	void refreshLinks();
 };
 
 #endif
