@@ -36,5 +36,11 @@ int main(int argc, char *argv[]){
 
 	thisSimulation.writeChainToFile("chain.dat");
 
+	thisSimulation.step(200);
+
+	thisSimulation.writeChainToFile("chain2.dat");
+
+	// next: implement collision with walls; then implement stiffness
+
 	return 0;
 }
