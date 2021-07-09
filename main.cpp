@@ -29,16 +29,26 @@ int main(int argc, char *argv[]){
 								Vector(1.0f, 0.0f), Vector(100.0f, 0.0f)});
 	thisSimulation.writeWallsToFile("walls.dat");
 
-	thisSimulation.initChain(100);
+	thisSimulation.initChain(500, 0.02f);
 
 	//thisSimulation.chain.quickArrangementLine(Vector(0.0f, 2.5f), Vector(2.0f, 3.0f));
-	thisSimulation.chain.quickArrangementEntwined(Vector(0.0f, 2.5f), 0.5f, 3);
+	thisSimulation.chain.quickArrangementEntwined(Vector(1.0f, 2.5f), 0.5f, 1);
 
-	thisSimulation.writeChainToFile("chain.dat");
 
-	thisSimulation.step(200);
+	if (1 == 0) {
+		thisSimulation.writeChainToFile("chain.dat");
 
-	thisSimulation.writeChainToFile("chain2.dat");
+		thisSimulation.step(3000);
+
+		thisSimulation.writeChainToFile("chain2.dat");
+	} else {
+		for (int i = 0; i < 120; i++) {
+			thisSimulation.writeChainToFile(i);
+			thisSimulation.step(50);
+
+		}
+
+	}
 
 	// next: implement collision with walls; then implement stiffness
 

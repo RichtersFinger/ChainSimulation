@@ -8,12 +8,16 @@
 #include <iostream>
 
 Chain::Chain() {
-	stiffness = 100.0f;
-	stability = 100.0f;
+	stiffness = 1.0e5;
+	stability = 1.0e5;
+	stiffnessdamping = 500.0f;
+	stabilitydamping = 500.0f;
 }
 Chain::Chain(Chain *somechain) {
-	stiffness = 100.0f;
-	stability = 100.0f;
+	stiffness = 1.0e5;
+	stability = 1.0e5;
+	stiffnessdamping = 500.0f;
+	stabilitydamping = 500.0f;
 
 	// make chain elements
 	for (int i = 0; i < somechain->elements.size(); i++) {

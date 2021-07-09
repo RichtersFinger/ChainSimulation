@@ -8,6 +8,7 @@ public:
 	double x, y;
 	double vx, vy;
 	double radius;
+	double mass;
 	bool active;
 	ChainLink *linkL, *linkR;
 	ChainElement();

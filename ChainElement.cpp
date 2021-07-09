@@ -8,6 +8,7 @@ ChainElement::ChainElement() {
 	vx = 0.0f;
 	vy = 0.0f;
 	radius = 1.0f;
+	mass = 3.1415926f;
 	linkL = NULL;
 	linkR = NULL;
 	active = false;

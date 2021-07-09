@@ -6,8 +6,8 @@ class ChainElement;
 
 class Chain {
 public:
-	double stiffness; // restoring force if chain is bent
-	double stability; // restoring force if elements are pulled apart
+	double stiffness, stiffnessdamping; // restoring force if chain is bent + damping
+	double stability, stabilitydamping; // restoring force if elements are pulled apart + damping
 	std::vector<ChainElement*> elements;
 	Chain();
 	Chain(Chain *);

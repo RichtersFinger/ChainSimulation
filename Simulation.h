@@ -9,17 +9,19 @@ public:
 	double dt;
 
 	Simulation();
-	void initChain(int);
+	void initChain(int, double);
 	void addTrailofWalls(std::vector<Vector>);
 	void clearWalls();
 	void writeWallsToFile(const char *);
 	void writeChainToFile(const char *);
+	void writeChainToFile(int);
 	void step(int);
 
 private:
 	 double lengthOfVector(Vector);
 	 double distanceOfPoints(Vector, Vector);
 	 Vector relativeVector(Vector, Vector);
+	 double scalarproduct(Vector, Vector);
 	 std::vector<Vector> addSTDVectorVectors( std::vector<Vector>, std::vector<Vector>);
 	 std::vector<Vector> productSTDVectorVectorScalar( std::vector<Vector>, double);
 	 std::vector<Vector> getInternalForces(Chain); // returns std:vector of accelerations; input is chain
