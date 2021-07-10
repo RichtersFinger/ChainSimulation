@@ -24,15 +24,20 @@ int main(int argc, char *argv[]){
 
 	thisSimulation.clearWalls();
 
-	thisSimulation.addTrailofWalls(std::vector<Vector>{Vector(-100.0f, 2.0f), Vector(1.0f, 2.0f),
-								Vector(1.0f, 2.0f), Vector(1.0f, 0.0f),
-								Vector(1.0f, 0.0f), Vector(100.0f, 0.0f)});
+	/*
+	thisSimulation.addTrailofWalls(std::vector<Vector>{Vector(-100.0, 2.0), Vector(1.0, 2.0),
+									Vector(1.0, 2.0), Vector(1.0, 0.0),
+									Vector(1.0, 0.0), Vector(100.0, 0.0)});
+	*/
+	thisSimulation.addTrailofWalls(std::vector<Vector>{Vector(-100.0, 2.0), Vector(0.9, 2.0),
+								Vector(0.9, 2.0), Vector(1.0, 1.9)});
+								//, Vector(1.0, 1.9), Vector(1.0, 0.0)
 	thisSimulation.writeWallsToFile("walls.dat");
 
-	thisSimulation.initChain(500, 0.02f);
+	thisSimulation.initChain(200, 0.01, 8.0e4, 0.001);
 
 	//thisSimulation.chain.quickArrangementLine(Vector(0.0f, 2.5f), Vector(2.0f, 3.0f));
-	thisSimulation.chain.quickArrangementEntwined(Vector(1.0f, 2.5f), 0.5f, 1);
+	thisSimulation.chain.quickArrangementEntwined(Vector(0.0, 2.5), 0.5, 2);
 
 
 	if (1 == 0) {
@@ -42,10 +47,19 @@ int main(int argc, char *argv[]){
 
 		thisSimulation.writeChainToFile("chain2.dat");
 	} else {
-		for (int i = 0; i < 120; i++) {
+		for (int i = 0; i < 180; i++) {
+			//thisSimulation.writeChainToFile(i);
+			thisSimulation.step(50);
+		}
+		thisSimulation.chain.elements[0]->externalax = 300.0;
+		thisSimulation.chain.elements[0]->externalay = 300.0;
+		for (int i = 0; i < 180; i++) {
+			if (thisSimulation.chain.elements[0]->x > 1.2) {
+				thisSimulation.chain.elements[0]->externalax = 0.0;
+				thisSimulation.chain.elements[0]->externalay = 0.0;
+			}
 			thisSimulation.writeChainToFile(i);
 			thisSimulation.step(50);
-
 		}
 
 	}

@@ -9,7 +9,7 @@ public:
 	double dt;
 
 	Simulation();
-	void initChain(int, double);
+	void initChain(int, double, double = 1.0e4, double = 0.1);
 	void addTrailofWalls(std::vector<Vector>);
 	void clearWalls();
 	void writeWallsToFile(const char *);

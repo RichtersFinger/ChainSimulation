@@ -7,6 +7,7 @@ class ChainElement {
 public:
 	double x, y;
 	double vx, vy;
+	double externalax, externalay;
 	double radius;
 	double mass;
 	bool active;

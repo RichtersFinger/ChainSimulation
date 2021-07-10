@@ -3,12 +3,14 @@
 #include "ChainLink.h"
 
 ChainElement::ChainElement() {
-	x = 0.0f;
-	y = 0.0f;
-	vx = 0.0f;
-	vy = 0.0f;
-	radius = 1.0f;
-	mass = 3.1415926f;
+	x = 0.0;
+	y = 0.0;
+	vx = 0.0;
+	vy = 0.0;
+	externalax = 0.0;
+	externalay = 0.0;
+	radius = 1.0;
+	mass = 3.1415926;
 	linkL = NULL;
 	linkR = NULL;
 	active = false;

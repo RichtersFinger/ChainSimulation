@@ -8,16 +8,18 @@
 #include <iostream>
 
 Chain::Chain() {
-	stiffness = 1.0e5;
-	stability = 1.0e5;
-	stiffnessdamping = 500.0f;
-	stabilitydamping = 500.0f;
+	stiffness = 8.0e4;
+	stability = 2.0e5;
+	stiffnessdamping = 1.0;
+	stabilitydamping = 200.0;
+	stiffnessoffsetlength = 0.001;
 }
 Chain::Chain(Chain *somechain) {
-	stiffness = 1.0e5;
-	stability = 1.0e5;
-	stiffnessdamping = 500.0f;
-	stabilitydamping = 500.0f;
+	stiffness = 8.0e4;
+	stability = 2.0e5;
+	stiffnessdamping = 1.0;
+	stabilitydamping = 200.0;
+	stiffnessoffsetlength = 0.001;
 
 	// make chain elements
 	for (int i = 0; i < somechain->elements.size(); i++) {
@@ -82,8 +84,8 @@ void Chain::quickArrangementEntwined(Vector centerVector, double radius, int ntu
 
 	int ni = 0;
 	for(const auto& value: elements) {
-		value->x = centerVector.x + radius * cos(2.0f * 3.1415926f * float(ni)/float(nperturn));
-		value->y = centerVector.y + radius * sin(2.0f * 3.1415926f * float(ni)/float(nperturn)) + 0.5f * float(ni)/float(ntotal) * float(nturns) * radius;
+		value->x = centerVector.x + radius * cos(2.0 * 3.1415926 * float(ni)/float(nperturn));
+		value->y = centerVector.y + radius * sin(2.0 * 3.1415926 * float(ni)/float(nperturn)) + 0.5 * float(ni)/float(ntotal) * float(nturns) * radius;
 		ni++;
 	}
 	refreshLinks();

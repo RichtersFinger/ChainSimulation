@@ -13,13 +13,15 @@
 
 Simulation::Simulation() {
 	dt = 5.0e-4;
-	time = 0.0f;
+	time = 0.0;
 }
-void Simulation::initChain(int nElements, double chainThickness) {
+void Simulation::initChain(int nElements, double chainThickness, double chainstiffness, double chainstiffnessoffsetlength) {
 	chain.makeSimpleChain(nElements);
 	for(int i = 0; i < chain.elements.size(); i++) {
-		chain.elements[i]->radius = 0.5f * chainThickness;
+		chain.elements[i]->radius = 0.5 * chainThickness;
 	}
+	chain.stiffness = chainstiffness;
+	chain.stiffnessoffsetlength = chainstiffnessoffsetlength;
 }
 void Simulation::addTrailofWalls(std::vector<Vector> trailOfPoints ) {
 	int nWallSegments = trailOfPoints.size();
@@ -50,20 +52,13 @@ void Simulation::clearWalls() {
 std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns std:vector of accelerations; input is chain
 	std::vector<Vector> result;
 	for(int i = 0; i < somechain.elements.size(); i++) {
-		Vector currentforce(0.0f, 0.0f);
-		//somechain.
-		//	double stiffness, stiffnessdamping; // restoring force if chain is bent + damping
-		//	double stability, stabilitydamping; // restoring force if elements are pulled apart + damping
-
-		// somechain.elements[i]->linkL
-		// somechain.elements[i]->linkR
-
-
+		Vector currentforce(0.0, 0.0);
+		// stability
 		// left link
 		if (somechain.elements[i]->linkL->elA) {
 			Vector direction = relativeVector(Vector(somechain.elements[i]->x, somechain.elements[i]->y), Vector(somechain.elements[i]->linkL->elA->x, somechain.elements[i]->linkL->elA->y));
 			double distance = lengthOfVector(direction);
-			if (distance != 0.0f) {
+			if (distance != 0.0) {
 				direction.x /= distance;
 				direction.y /= distance;
 
@@ -80,7 +75,7 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 		if (somechain.elements[i]->linkR->elB) {
 			Vector direction = relativeVector(Vector(somechain.elements[i]->x, somechain.elements[i]->y), Vector(somechain.elements[i]->linkR->elB->x, somechain.elements[i]->linkR->elB->y));
 			double distance = lengthOfVector(direction);
-			if (distance != 0.0f) {
+			if (distance != 0.0) {
 				direction.x /= distance;
 				direction.y /= distance;
 
@@ -91,26 +86,48 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 
 				currentforce.x += fx;
 				currentforce.y += fy;
-			}/**/
+			}
 		}
 
 		result.push_back(currentforce);
+	}
+
+	for(int i = 1; i < somechain.elements.size() - 1; i++) {
+		// stiffness
+		if (somechain.elements[i]->linkL->elA && somechain.elements[i]->linkR->elB) {
+			Vector directionA = relativeVector(Vector(somechain.elements[i]->x, somechain.elements[i]->y), Vector(somechain.elements[i]->linkL->elA->x, somechain.elements[i]->linkL->elA->y));
+			Vector directionB = relativeVector(Vector(somechain.elements[i]->x, somechain.elements[i]->y), Vector(somechain.elements[i]->linkR->elB->x, somechain.elements[i]->linkR->elB->y));
+			Vector direction = Vector(directionA.x + directionB.x, directionA.y + directionB.y);
+			double elongationlength = lengthOfVector(direction);
+			direction.x /= elongationlength;
+			direction.y /= elongationlength;
+			double avgLinkLength = 0.5 * (somechain.elements[i]->linkL->linkLength0 + somechain.elements[i]->linkR->linkLength0);
+
+			double fx = std::max(0.0, elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.x;
+			double fy = std::max(0.0, elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.y;
+
+			result[i].x += fx;
+			result[i].y += fy;
+			result[i-1].x -= 0.5 * fx;
+			result[i-1].y -= 0.5 * fy;
+			result[i+1].x -= 0.5 * fx;
+			result[i+1].y -= 0.5 * fy;
+		}
 	}
 	return result;
 }
 std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*> somewalls) { // returns std:vector of accelerations; input is chain and walls
 	std::vector<Vector> result;
 	for(int i = 0; i < somechain.elements.size(); i++) {
-		Vector currentforce(0.0f, 0.0f);
+		Vector currentforce(0.0, 0.0);
 		for(const auto& somewall: somewalls) {
 			double ndist = scalarproduct(Vector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y), Vector(somewall->normalx, somewall->normaly));
 			if (ndist < somechain.elements[i]->radius && ndist > -somewall->thickness) {
 				double tdist = scalarproduct(Vector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y), Vector(somewall->tangentx, somewall->tangenty));
-				if (tdist > 0.0f && tdist < somewall->length) {
+				if (tdist > 0.0 && tdist < somewall->length) {
 					// actual collision
 					double vrelnorm = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->normalx, somewall->normaly));
 					double vreltang = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->tangentx, somewall->tangenty));
-					//std::max(
 					double fnx = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->damping * vrelnorm) * somewall->normalx;
 					double fny = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->damping * vrelnorm) * somewall->normaly;
 					double fn = lengthOfVector(Vector(fnx, fny));
@@ -119,7 +136,7 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 					double ft = lengthOfVector(Vector(ftx, fty));
 
 					double ftfrictionfactor;
-					if (ft > 0.0f) {
+					if (ft > 0.0) {
 						ftfrictionfactor = std::min(somewall->friction * fn, ft)/ft;
 					}
 					currentforce.x += fnx + ftfrictionfactor * ftx;
@@ -134,7 +151,7 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 std::vector<Vector> Simulation::getExternalForces(Chain somechain, double sometime) { // returns std:vector of accelerations; input is chain and time
 	std::vector<Vector> result;
 	for(int i = 0; i < somechain.elements.size(); i++) {
-		result.push_back(Vector(0.0f, -9.81f));
+		result.push_back(Vector(0.0 + somechain.elements[i]->externalax, -9.81 + somechain.elements[i]->externalay));
 	}
 	return result;
 }
@@ -154,9 +171,9 @@ void Simulation::step(int nsteps) {
 		std::vector<Vector> k1walls = getWallForces(chain, walls);
 		std::vector<Vector> k1ext = getExternalForces(chain, time);
 		std::vector<Vector> k1v = addSTDVectorVectors(k1int, addSTDVectorVectors(k1walls, k1ext));
-		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector, productSTDVectorVectorScalar(k1v, 0.5f * dt));
-		chain_stdVector = addSTDVectorVectors(chain0_stdVector, productSTDVectorVectorScalar(k1x, 0.5f * dt));
-		time = time0 + ((double) i + 0.5f) * dt;
+		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector, productSTDVectorVectorScalar(k1v, 0.5 * dt));
+		chain_stdVector = addSTDVectorVectors(chain0_stdVector, productSTDVectorVectorScalar(k1x, 0.5 * dt));
+		time = time0 + ((double) i + 0.5) * dt;
 		chain.loadXYFromSTDVector(chain_stdVector);
 		chain.loadVXYFromSTDVector(chainv_stdVector);
 
@@ -165,9 +182,9 @@ void Simulation::step(int nsteps) {
 		std::vector<Vector> k2walls = getWallForces(chain, walls);
 		std::vector<Vector> k2ext = getExternalForces(chain, time);
 		std::vector<Vector> k2v = addSTDVectorVectors(k2int, addSTDVectorVectors(k2walls, k2ext));
-		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector, productSTDVectorVectorScalar(k2v, 0.5f * dt));
-		chain_stdVector = addSTDVectorVectors(chain0_stdVector, productSTDVectorVectorScalar(k2x, 0.5f * dt));
-		time = time0 + ((double) i + 0.5f) * dt;
+		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector, productSTDVectorVectorScalar(k2v, 0.5 * dt));
+		chain_stdVector = addSTDVectorVectors(chain0_stdVector, productSTDVectorVectorScalar(k2x, 0.5 * dt));
+		time = time0 + ((double) i + 0.5) * dt;
 		chain.loadXYFromSTDVector(chain_stdVector);
 		chain.loadVXYFromSTDVector(chainv_stdVector);
 
@@ -176,9 +193,9 @@ void Simulation::step(int nsteps) {
 		std::vector<Vector> k3walls = getWallForces(chain, walls);
 		std::vector<Vector> k3ext = getExternalForces(chain, time);
 		std::vector<Vector> k3v = addSTDVectorVectors(k3int, addSTDVectorVectors(k3walls, k3ext));
-		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector, productSTDVectorVectorScalar(k3v, 0.5f * dt));
-		chain_stdVector = addSTDVectorVectors(chain0_stdVector, productSTDVectorVectorScalar(k3x, 0.5f * dt));
-		time = time0 + ((double) i + 1.0f) * dt;
+		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector, productSTDVectorVectorScalar(k3v, 0.5 * dt));
+		chain_stdVector = addSTDVectorVectors(chain0_stdVector, productSTDVectorVectorScalar(k3x, 0.5 * dt));
+		time = time0 + ((double) i + 1.0) * dt;
 		chain.loadXYFromSTDVector(chain_stdVector);
 		chain.loadVXYFromSTDVector(chainv_stdVector);
 
@@ -190,16 +207,16 @@ void Simulation::step(int nsteps) {
 
 		chain_stdVector = addSTDVectorVectors(chain0_stdVector,
 									productSTDVectorVectorScalar(addSTDVectorVectors(k1x,
-																			addSTDVectorVectors(productSTDVectorVectorScalar(k2x, 2.0f),
-																			addSTDVectorVectors(productSTDVectorVectorScalar(k3x, 2.0f),
+																			addSTDVectorVectors(productSTDVectorVectorScalar(k2x, 2.0),
+																			addSTDVectorVectors(productSTDVectorVectorScalar(k3x, 2.0),
 																							k4x))),
-									dt/6.0f));
+									dt/6.0));
 		chainv_stdVector = addSTDVectorVectors(chainv0_stdVector,
 									productSTDVectorVectorScalar(addSTDVectorVectors(k1v,
-																			addSTDVectorVectors(productSTDVectorVectorScalar(k2v, 2.0f),
-																			addSTDVectorVectors(productSTDVectorVectorScalar(k3v, 2.0f),
+																			addSTDVectorVectors(productSTDVectorVectorScalar(k2v, 2.0),
+																			addSTDVectorVectors(productSTDVectorVectorScalar(k3v, 2.0),
 																							k4v))),
-									dt/6.0f));
+									dt/6.0));
 		chain.loadXYFromSTDVector(chain_stdVector);
 		chain.loadVXYFromSTDVector(chainv_stdVector);
 
