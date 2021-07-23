@@ -9,11 +9,14 @@ public:
 	double dt;
 
 	Simulation();
-	void initChain(int, double, double = 1.0e4, double = 0.1);
+	void initChain(int, double, double = 1.0e4, double = 0.1, double = 2.0e4);
 	void addTrailofWalls(std::vector<Vector>);
+	void addSphericalBoundary(double, double, double);
 	void clearWalls();
 	void writeWallsToFile(const char *);
 	void writeChainToFile(const char *);
+	void saveChainBackup(const char *);
+	void loadChainBackup(const char *);
 	void writeChainToFile(int);
 	void step(int);
 

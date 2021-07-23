@@ -12,16 +12,19 @@
 #include "Simulation.h"
 
 Simulation::Simulation() {
-	dt = 5.0e-4;
+	dt = 2.5e-5;
 	time = 0.0;
 }
-void Simulation::initChain(int nElements, double chainThickness, double chainstiffness, double chainstiffnessoffsetlength) {
+void Simulation::initChain(int nElements, double chainThickness, double chainstiffness, double chainstiffnessoffsetlength, double chainstability) {
 	chain.makeSimpleChain(nElements);
 	for(int i = 0; i < chain.elements.size(); i++) {
 		chain.elements[i]->radius = 0.5 * chainThickness;
 	}
 	chain.stiffness = chainstiffness;
 	chain.stiffnessoffsetlength = chainstiffnessoffsetlength;
+	chain.stiffnessdamping = 0.0005 * sqrt(chain.stiffness);
+	chain.stability = chainstability;
+	chain.stabilitydamping = 0.005 * sqrt(chain.stability);
 }
 void Simulation::addTrailofWalls(std::vector<Vector> trailOfPoints ) {
 	int nWallSegments = trailOfPoints.size();
@@ -42,6 +45,16 @@ void Simulation::addTrailofWalls(std::vector<Vector> trailOfPoints ) {
 		}
 	}
 }
+void Simulation::addSphericalBoundary(double x0, double y0, double r0) {
+	Wall* thisWall = new Wall();
+
+	thisWall->x = x0;
+	thisWall->y = y0;
+	thisWall->length = r0;
+	thisWall->thisWallType = sphere;
+
+	walls.push_back(thisWall);
+}
 void Simulation::clearWalls() {
 	for(const auto& value: walls) {
 		delete value;
@@ -51,9 +64,9 @@ void Simulation::clearWalls() {
 
 std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns std:vector of accelerations; input is chain
 	std::vector<Vector> result;
+	// stability
 	for(int i = 0; i < somechain.elements.size(); i++) {
 		Vector currentforce(0.0, 0.0);
-		// stability
 		// left link
 		if (somechain.elements[i]->linkL->elA) {
 			Vector direction = relativeVector(Vector(somechain.elements[i]->x, somechain.elements[i]->y), Vector(somechain.elements[i]->linkL->elA->x, somechain.elements[i]->linkL->elA->y));
@@ -121,18 +134,44 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 	for(int i = 0; i < somechain.elements.size(); i++) {
 		Vector currentforce(0.0, 0.0);
 		for(const auto& somewall: somewalls) {
-			double ndist = scalarproduct(Vector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y), Vector(somewall->normalx, somewall->normaly));
-			if (ndist < somechain.elements[i]->radius && ndist > -somewall->thickness) {
-				double tdist = scalarproduct(Vector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y), Vector(somewall->tangentx, somewall->tangenty));
-				if (tdist > 0.0 && tdist < somewall->length) {
-					// actual collision
-					double vrelnorm = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->normalx, somewall->normaly));
-					double vreltang = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->tangentx, somewall->tangenty));
-					double fnx = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->damping * vrelnorm) * somewall->normalx;
-					double fny = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->damping * vrelnorm) * somewall->normaly;
+			if (somewall->thisWallType == wall) {
+				double ndist = scalarproduct(Vector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y), Vector(somewall->normalx, somewall->normaly));
+				if (ndist < somechain.elements[i]->radius && ndist > -somewall->thickness) {
+					double tdist = scalarproduct(Vector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y), Vector(somewall->tangentx, somewall->tangenty));
+					if (tdist > 0.0 && tdist < somewall->length) {
+						// actual collision
+						double vrelnorm = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->normalx, somewall->normaly));
+						double vreltang = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->tangentx, somewall->tangenty));
+						double fnx = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->ndamping * vrelnorm) * somewall->normalx;
+						double fny = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->ndamping * vrelnorm) * somewall->normaly;
+						double fn = lengthOfVector(Vector(fnx, fny));
+						double ftx = - somewall->tdamping * vreltang * somewall->tangentx;
+						double fty = - somewall->tdamping * vreltang * somewall->tangenty;
+						double ft = lengthOfVector(Vector(ftx, fty));
+
+						double ftfrictionfactor;
+						if (ft > 0.0) {
+							ftfrictionfactor = std::min(somewall->friction * fn, ft)/ft;
+						}
+						currentforce.x += fnx + ftfrictionfactor * ftx;
+						currentforce.y += fny + ftfrictionfactor * fty;
+					}
+				}
+			}
+			if (somewall->thisWallType == sphere) {
+				Vector relativeVector(somechain.elements[i]->x - somewall->x, somechain.elements[i]->y - somewall->y);
+				double dist = lengthOfVector(relativeVector);
+				if (dist < somechain.elements[i]->radius + somewall->length) {
+					relativeVector.x /= dist;
+					relativeVector.y /= dist;
+					double vrelnorm = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), relativeVector);
+					double vreltang = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(-relativeVector.y, relativeVector.x));
+
+					double fnx = (somewall->stiffness * (somechain.elements[i]->radius + somewall->length - dist) - somewall->ndamping * vrelnorm) * relativeVector.x;
+					double fny = (somewall->stiffness * (somechain.elements[i]->radius + somewall->length - dist) - somewall->ndamping * vrelnorm) * relativeVector.y;
 					double fn = lengthOfVector(Vector(fnx, fny));
-					double ftx = - somewall->damping * vreltang * somewall->tangentx;
-					double fty = - somewall->damping * vreltang * somewall->tangenty;
+					double ftx = - somewall->tdamping * vreltang * (-1.0 * relativeVector.y);
+					double fty = - somewall->tdamping * vreltang * relativeVector.x;
 					double ft = lengthOfVector(Vector(ftx, fty));
 
 					double ftfrictionfactor;
@@ -141,6 +180,7 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 					}
 					currentforce.x += fnx + ftfrictionfactor * ftx;
 					currentforce.y += fny + ftfrictionfactor * fty;
+
 				}
 			}
 		}
@@ -151,7 +191,15 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 std::vector<Vector> Simulation::getExternalForces(Chain somechain, double sometime) { // returns std:vector of accelerations; input is chain and time
 	std::vector<Vector> result;
 	for(int i = 0; i < somechain.elements.size(); i++) {
-		result.push_back(Vector(0.0 + somechain.elements[i]->externalax, -9.81 + somechain.elements[i]->externalay));
+		Vector direction = Vector(somechain.elements[i]->vx, somechain.elements[i]->vy);
+		double speed = lengthOfVector(direction);
+		if (speed > 0.0) {
+			direction.x /= speed;
+			direction.y /= speed;
+		}
+		double drag = 0.0;
+		result.push_back(Vector(0.0 + somechain.elements[i]->externalax - drag * speed * speed * direction.x,
+										-9.81 + somechain.elements[i]->externalay - drag * speed * speed * direction.y));
 	}
 	return result;
 }
@@ -233,9 +281,17 @@ void Simulation::writeWallsToFile(const char * filename) {
 	std::ofstream outputfile;
 	outputfile.open(filename);
 	for (const auto& value: walls) {
-		outputfile << value->x << "\t" << value->y << std::endl;
-		outputfile << value->x + value->tangentx * value->length << "\t" << value->y + value->tangenty * value->length << std::endl;
-		outputfile << std::endl;
+		if (value->thisWallType == wall) {
+			outputfile << value->x << "\t" << value->y << std::endl;
+			outputfile << value->x + value->tangentx * value->length << "\t" << value->y + value->tangenty * value->length << std::endl;
+			outputfile << std::endl;
+		}
+		if (value->thisWallType == sphere) {
+			for (int i = 0; i < 100; i++) {
+				outputfile << value->x + value->length * cos(2.0*3.1415927*(double)i/100.0) << "\t" << value->y + value->length * sin(2.0*3.1415927*(double)i/100.0) << std::endl;
+			}
+			outputfile << std::endl;
+		}
 	}
 	outputfile.close();
 }
@@ -260,6 +316,29 @@ void Simulation::writeChainToFile(int number) {
 	outputfile.close();
 
 	return;
+}
+void Simulation::saveChainBackup(const char * filename) {
+	std::ofstream outputfile;
+	outputfile.open(filename);
+	for (const auto& value: chain.elements) {
+		outputfile << value->x << "\t" << value->y << "\t" << value->vx << "\t" << value->vy << "\t" << value->radius << "\t" << value->mass << std::endl;
+	}
+	outputfile.close();
+}
+// loading state of chain from backup requires the identical chain setup, i.e. number of elements
+void Simulation::loadChainBackup(const char * filename) {
+	std::ifstream inputfile;
+
+	inputfile.open(filename);
+	for (const auto& value: chain.elements) {
+		inputfile >> value->x;
+		inputfile >> value->y;
+		inputfile >> value->vx;
+		inputfile >> value->vy;
+		inputfile >> value->radius;
+		inputfile >> value->mass;
+	}
+	inputfile.close();
 }
 
 std::vector<Vector> Simulation::addSTDVectorVectors( std::vector<Vector> vecA, std::vector<Vector> vecB) {

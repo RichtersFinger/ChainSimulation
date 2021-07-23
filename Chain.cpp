@@ -8,17 +8,17 @@
 #include <iostream>
 
 Chain::Chain() {
-	stiffness = 8.0e4;
-	stability = 2.0e5;
-	stiffnessdamping = 1.0;
-	stabilitydamping = 200.0;
+	stiffness = 4.0e4;
+	stability = 2.0e4;
+	stiffnessdamping = 0.0005 * sqrt(stiffness);
+	stabilitydamping = 0.005 * sqrt(stability);
 	stiffnessoffsetlength = 0.001;
 }
 Chain::Chain(Chain *somechain) {
-	stiffness = 8.0e4;
-	stability = 2.0e5;
-	stiffnessdamping = 1.0;
-	stabilitydamping = 200.0;
+	stiffness = 4.0e4;
+	stability = 2.0e4;
+	stiffnessdamping = 0.0005 * sqrt(stiffness);
+	stabilitydamping = 0.005 * sqrt(stability);
 	stiffnessoffsetlength = 0.001;
 
 	// make chain elements
