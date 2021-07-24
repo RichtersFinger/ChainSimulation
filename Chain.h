@@ -13,7 +13,7 @@ public:
 	Chain(Chain *);
 	void makeSimpleChain(int);
 	void quickArrangementLine(Vector, Vector);
-	void quickArrangementEntwined(Vector, double, int);
+	void quickArrangementEntwined(Vector, double, int, double = 0.5);
 	void refreshLinks();
 	void loadFromChain(Chain *);
 	void loadXYFromSTDVector(std::vector<Vector>);

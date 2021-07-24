@@ -78,14 +78,14 @@ void Chain::quickArrangementLine(Vector startVector, Vector endVector) {
 	}
 	refreshLinks();
 }
-void Chain::quickArrangementEntwined(Vector centerVector, double radius, int nturns) {
+void Chain::quickArrangementEntwined(Vector centerVector, double radius, int nturns, double translation) {
 	int ntotal = elements.size();
 	int nperturn = ntotal/nturns;
 
 	int ni = 0;
 	for(const auto& value: elements) {
 		value->x = centerVector.x + radius * cos(2.0 * 3.1415926 * float(ni)/float(nperturn));
-		value->y = centerVector.y + radius * sin(2.0 * 3.1415926 * float(ni)/float(nperturn)) + 0.5 * float(ni)/float(ntotal) * float(nturns) * radius;
+		value->y = centerVector.y + radius * sin(2.0 * 3.1415926 * float(ni)/float(nperturn)) + translation * float(ni)/float(ntotal) * float(nturns) * radius;
 		ni++;
 	}
 	refreshLinks();

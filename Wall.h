@@ -22,10 +22,10 @@ public:
 		normaly = 1.0;
 		tangentx = 1.0;
 		tangenty = 0.0;
-		stiffness = 2.0e5;
+		stiffness = 2.0e6;
 		ndamping = -2.0 * sqrt(stiffness * 3.1415926) * log(0.5)/sqrt(3.1415926*3.1415926 + log(0.5)*log(0.5));
 		tdamping = -2.0 * sqrt(stiffness * 3.1415926) * log(0.8)/sqrt(3.1415926*3.1415926 + log(0.8)*log(0.8));
-		friction = 0.5;
+		friction = 0.2;
 		thisWallType = wall;
 	}
 };

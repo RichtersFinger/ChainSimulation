@@ -22,9 +22,9 @@ void Simulation::initChain(int nElements, double chainThickness, double chainsti
 	}
 	chain.stiffness = chainstiffness;
 	chain.stiffnessoffsetlength = chainstiffnessoffsetlength;
-	chain.stiffnessdamping = 0.0005 * sqrt(chain.stiffness);
+	chain.stiffnessdamping = (double) nElements / 3000.0 * 0.0005 * sqrt(chain.stiffness);
 	chain.stability = chainstability;
-	chain.stabilitydamping = 0.005 * sqrt(chain.stability);
+	chain.stabilitydamping = (double) nElements / 3000.0 * 0.005 * sqrt(chain.stability);
 }
 void Simulation::addTrailofWalls(std::vector<Vector> trailOfPoints ) {
 	int nWallSegments = trailOfPoints.size();
@@ -116,8 +116,8 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 			direction.y /= elongationlength;
 			double avgLinkLength = 0.5 * (somechain.elements[i]->linkL->linkLength0 + somechain.elements[i]->linkR->linkLength0);
 
-			double fx = std::max(0.0, elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.x;
-			double fy = std::max(0.0, elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.y;
+			double fx = std::max(0.0, 0.5 * elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.x;
+			double fy = std::max(0.0, 0.5 * elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.y;
 
 			result[i].x += fx;
 			result[i].y += fy;
@@ -142,11 +142,11 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 						// actual collision
 						double vrelnorm = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->normalx, somewall->normaly));
 						double vreltang = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somewall->tangentx, somewall->tangenty));
-						double fnx = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->ndamping * vrelnorm) * somewall->normalx;
-						double fny = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - somewall->ndamping * vrelnorm) * somewall->normaly;
+						double fnx = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - (double) somechain.elements.size() / 3000.0 * somewall->ndamping * vrelnorm) * somewall->normalx;
+						double fny = (somewall->stiffness * (somechain.elements[i]->radius - ndist) - (double) somechain.elements.size() / 3000.0 * somewall->ndamping * vrelnorm) * somewall->normaly;
 						double fn = lengthOfVector(Vector(fnx, fny));
-						double ftx = - somewall->tdamping * vreltang * somewall->tangentx;
-						double fty = - somewall->tdamping * vreltang * somewall->tangenty;
+						double ftx = - (double) somechain.elements.size() / 3000.0 * somewall->tdamping * vreltang * somewall->tangentx;
+						double fty = - (double) somechain.elements.size() / 3000.0 * somewall->tdamping * vreltang * somewall->tangenty;
 						double ft = lengthOfVector(Vector(ftx, fty));
 
 						double ftfrictionfactor;
@@ -167,11 +167,11 @@ std::vector<Vector> Simulation::getWallForces(Chain somechain, std::vector<Wall*
 					double vrelnorm = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), relativeVector);
 					double vreltang = scalarproduct(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(-relativeVector.y, relativeVector.x));
 
-					double fnx = (somewall->stiffness * (somechain.elements[i]->radius + somewall->length - dist) - somewall->ndamping * vrelnorm) * relativeVector.x;
-					double fny = (somewall->stiffness * (somechain.elements[i]->radius + somewall->length - dist) - somewall->ndamping * vrelnorm) * relativeVector.y;
+					double fnx = (somewall->stiffness * (somechain.elements[i]->radius + somewall->length - dist) - (double) somechain.elements.size() / 3000.0 * somewall->ndamping * vrelnorm) * relativeVector.x;
+					double fny = (somewall->stiffness * (somechain.elements[i]->radius + somewall->length - dist) - (double) somechain.elements.size() / 3000.0 * somewall->ndamping * vrelnorm) * relativeVector.y;
 					double fn = lengthOfVector(Vector(fnx, fny));
-					double ftx = - somewall->tdamping * vreltang * (-1.0 * relativeVector.y);
-					double fty = - somewall->tdamping * vreltang * relativeVector.x;
+					double ftx = - (double) somechain.elements.size() / 3000.0 * somewall->tdamping * vreltang * (-1.0 * relativeVector.y);
+					double fty = - (double) somechain.elements.size() / 3000.0 * somewall->tdamping * vreltang * relativeVector.x;
 					double ft = lengthOfVector(Vector(ftx, fty));
 
 					double ftfrictionfactor;

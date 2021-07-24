@@ -13,7 +13,8 @@ do for [i=1:179] {
 	set output sprintf('res/image%05d.png', i)
 
 	pl 'walls.dat' w lines lw 2 lc rgb '#000000', \
-	   sprintf('data/output%05d.dat', i) w linesp pt 7 ps 0.2 lw 2 lc rgb '#0060ad'
+	   sprintf('data/output%05d.dat', i) w lines lw 6 lc rgb '#0060ad', \
+	   sprintf('data/output%05d.dat', i) u 1:2:(0.02) w circles fs solid lc rgb '#0060ad'
 
 
 }

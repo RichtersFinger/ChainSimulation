@@ -9,7 +9,7 @@ public:
 	double dt;
 
 	Simulation();
-	void initChain(int, double, double = 1.0e4, double = 0.1, double = 2.0e4);
+	void initChain(int, double, double = 1.0e5, double = 0.5, double = 2.0e5);
 	void addTrailofWalls(std::vector<Vector>);
 	void addSphericalBoundary(double, double, double);
 	void clearWalls();
