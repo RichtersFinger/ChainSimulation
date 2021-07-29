@@ -77,6 +77,8 @@ void Chain::quickArrangementLine(Vector startVector, Vector endVector) {
 		ni++;
 	}
 	refreshLinks();
+	stiffnessdamping = (double) ntotal / 3000.0 * 0.0005 * sqrt(stiffness) * 180.0 / distance;
+	stabilitydamping = (double) ntotal / 3000.0 * 0.005 * sqrt(stability) * 180.0 / distance;
 }
 void Chain::quickArrangementEntwined(Vector centerVector, double radius, int nturns, double translation) {
 	int ntotal = elements.size();
@@ -89,6 +91,10 @@ void Chain::quickArrangementEntwined(Vector centerVector, double radius, int ntu
 		ni++;
 	}
 	refreshLinks();
+
+	double distance = (double) nturns * 2.0 * 3.14159265 * radius;
+	stiffnessdamping = (double) ntotal / 3000.0 * 0.0005 * sqrt(stiffness) * 180.0 / distance;
+	stabilitydamping = (double) ntotal / 3000.0 * 0.005 * sqrt(stability) * 180.0 / distance;
 }
 void Chain::refreshLinks() {
 	for(const auto& value: elements) {
