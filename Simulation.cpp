@@ -101,7 +101,6 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 				currentforce.y += fy;
 			}
 		}
-
 		result.push_back(currentforce);
 	}
 
@@ -112,19 +111,21 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 			Vector directionB = relativeVector(Vector(somechain.elements[i]->x, somechain.elements[i]->y), Vector(somechain.elements[i]->linkR->elB->x, somechain.elements[i]->linkR->elB->y));
 			Vector direction = Vector(directionA.x + directionB.x, directionA.y + directionB.y);
 			double elongationlength = lengthOfVector(direction);
-			direction.x /= elongationlength;
-			direction.y /= elongationlength;
 			double avgLinkLength = 0.5 * (somechain.elements[i]->linkL->linkLength0 + somechain.elements[i]->linkR->linkLength0);
+			if (elongationlength > 1e-6 * avgLinkLength) {
+				direction.x /= elongationlength;
+				direction.y /= elongationlength;
 
-			double fx = std::max(0.0, 0.5 * elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.x;
-			double fy = std::max(0.0, 0.5 * elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.y;
+				double fx = std::max(0.0, 0.5 * elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.x;
+				double fy = std::max(0.0, 0.5 * elongationlength - somechain.stiffnessoffsetlength * avgLinkLength ) * somechain.stiffness * direction.y;
 
-			result[i].x += fx;
-			result[i].y += fy;
-			result[i-1].x -= 0.5 * fx;
-			result[i-1].y -= 0.5 * fy;
-			result[i+1].x -= 0.5 * fx;
-			result[i+1].y -= 0.5 * fy;
+				result[i].x += fx;
+				result[i].y += fy;
+				result[i-1].x -= 0.5 * fx;
+				result[i-1].y -= 0.5 * fy;
+				result[i+1].x -= 0.5 * fx;
+				result[i+1].y -= 0.5 * fy;
+			}
 		}
 	}
 	return result;
@@ -211,7 +212,6 @@ void Simulation::step(int nsteps) {
 	std::vector<Vector> chain_stdVector = chain.XYto_STDVector();
 	std::vector<Vector> chainv0_stdVector = chain0.VXYto_STDVector();
 	std::vector<Vector> chainv_stdVector = chain.VXYto_STDVector();
-	//std::cout << chain0.elements[2]->x << " " << chain.elements[2]->x << std::endl;
 
 	for (int i = 0; i < nsteps; i++) {
 		std::vector<Vector> k1x = chainv_stdVector;
