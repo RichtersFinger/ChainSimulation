@@ -76,6 +76,9 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 				direction.y /= distance;
 
 				Vector relativevelocity = relativeVector(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somechain.elements[i]->linkL->elA->vx, somechain.elements[i]->linkL->elA->vy));
+				double parallelcomponent = scalarproduct(relativevelocity, direction);
+				relativevelocity.x = parallelcomponent * direction.x;
+				relativevelocity.y = parallelcomponent * direction.y;
 
 				double fx = somechain.stability * (distance - somechain.elements[i]->linkL->linkLength0) * direction.x + somechain.stabilitydamping * relativevelocity.x;
 				double fy = somechain.stability * (distance - somechain.elements[i]->linkL->linkLength0) * direction.y + somechain.stabilitydamping * relativevelocity.y;
@@ -93,6 +96,9 @@ std::vector<Vector> Simulation::getInternalForces(Chain somechain) { // returns 
 				direction.y /= distance;
 
 				Vector relativevelocity = relativeVector(Vector(somechain.elements[i]->vx, somechain.elements[i]->vy), Vector(somechain.elements[i]->linkR->elB->vx, somechain.elements[i]->linkR->elB->vy));
+				double parallelcomponent = scalarproduct(relativevelocity, direction);
+				relativevelocity.x = parallelcomponent * direction.x;
+				relativevelocity.y = parallelcomponent * direction.y;
 
 				double fx = somechain.stability * (distance - somechain.elements[i]->linkR->linkLength0) * direction.x + somechain.stabilitydamping * relativevelocity.x;
 				double fy = somechain.stability * (distance - somechain.elements[i]->linkR->linkLength0) * direction.y + somechain.stabilitydamping * relativevelocity.y;

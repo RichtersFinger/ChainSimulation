@@ -43,7 +43,7 @@ int main(int argc, char *argv[]){
 	thisSimulation.writeWallsToFile("walls.dat");
 
 	// make chain
-	thisSimulation.initChain(16*200, 0.04, 1.0e5, 0.5, 2.0e5);
+	thisSimulation.initChain(16*200, 0.04, 1.0e6, 0.5, 1.0e6);
 
 	// arrange chain elements in a loop above the container
 	thisSimulation.chain.quickArrangementEntwined(Vector(containerposx + 0.5 * containerwidth, containerposy + 0.5 * containerheight), 0.33 * containerwidth, 16*8, 0.1);
